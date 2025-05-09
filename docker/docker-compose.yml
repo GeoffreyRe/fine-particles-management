@@ -1,0 +1,45 @@
+version: '3.9'
+name: fine-particles-management
+
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  db:
+    container_name: db
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - app-network
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    container_name: backend
+    image: fine-particles-management-backend:latest
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+    volumes:
+      - ../app:/app
+    networks:
+      - app-network
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
