@@ -7,7 +7,23 @@
 </head>
 <body>
 <div class="container mt-4">
-    <h2 class="mb-4">Liste des Measurements</h2>
+    <h2 class="mb-4">
+        {% if filter_type %}
+            Mesures de type : {{ filter_type }}
+        {% else %}
+            Toutes les mesures
+        {% endif %}
+    </h2>
+
+    <div class="mb-3">
+        <strong>Filtrer par type :</strong>
+        <a href="{% url 'measurement_list' %}" class="btn btn-outline-primary btn-sm me-2">Tous</a>
+        {% for t in types %}
+            <a href="{% url 'measurement_by_type' t.name %}" class="btn btn-outline-primary btn-sm me-2">
+                {{ t.name }}
+            </a>
+        {% endfor %}
+    </div>
     <table class="table table-hover table-bordered">
         <thead class="table-light">
             <tr>
@@ -20,7 +36,7 @@
         <tbody>
         {% for m in measurements %}
             <tr>
-                <td>{{ m.time }}</td>
+                <td>{{ m.time|date:"d/m/Y H:i:s" }}</td>
                 <td>{{ m.value }}</td>
                 <td>{{ m.unit.name }}</td>
                 <td>{{ m.type.name }}</td>
