@@ -2,6 +2,8 @@ from django.core.paginator import Paginator
 from django.views.generic import ListView
 from .models import Measurement, MeasurementType
 from django.shortcuts import render, redirect
+from collections import defaultdict
+import json
 
 class MeasurementListView(ListView):
     model = Measurement
@@ -75,8 +77,54 @@ class MeasurementByTypeListView(ListView):
         context['is_paginated'] = page_obj.has_other_pages()
         return context
 
+from django.shortcuts import render
+from collections import defaultdict
+import json
+from .models import Measurement  # adapte selon ton modèle
+
 def dashboard(request):
-    return render(request, 'fine_particles/dashboard.html')    
+    # Récupérer toutes les mesures avec leur type
+    measurements = Measurement.objects.select_related('type').all()
+
+    # Regrouper par type et heure (arrondi à l'heure)
+    grouped = defaultdict(lambda: defaultdict(list))
+    all_hours = set()
+
+    for m in measurements:
+        type_name = m.type.name
+        # Arrondir à l'heure (minutes, secondes à 0)
+        hour_str = m.time.replace(minute=0, second=0, microsecond=0).isoformat()
+        grouped[type_name][hour_str].append(m.value)
+        all_hours.add(hour_str)
+
+    sorted_hours = sorted(all_hours)
+
+    colors = ['rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(255, 206, 86)', 'rgb(75, 192, 192)']
+    datasets = []
+
+    # Calcul de la moyenne par heure
+    for index, (type_name, hour_values) in enumerate(grouped.items()):
+        values = []
+        for hour in sorted_hours:
+            vals = hour_values.get(hour, [])
+            avg = sum(vals) / len(vals) if vals else None
+            values.append(avg)
+        datasets.append({
+            'label': type_name,
+            'data': values,
+            'borderColor': colors[index % len(colors)],
+            'fill': False,
+            'spanGaps': True,
+            'tension': 0.3,
+        })
+
+    context = {
+        'chart_labels': json.dumps(sorted_hours),
+        'chart_datasets': json.dumps(datasets),
+    }
+
+    return render(request, 'fine_particles/dashboard.html', context)
+
 
 def redirect_dashboard(request):
     return redirect("/measurements/dashboard/")

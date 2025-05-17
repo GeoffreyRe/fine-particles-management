@@ -1,54 +1,70 @@
-<!-- templates/dashboard.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard Particules</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <title>Dashboard Particules</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Dashboard des mesures de particules</h1>
-    <canvas id="particleChart" width="400" height="200"></canvas>
-    
-    <script>
-        // Exemple de données fictives
-        var data = {
-            labels: ["2025-05-01", "2025-05-02", "2025-05-03", "2025-05-04"],  // Dates
-            datasets: [{
-                label: 'Type 1',
-                data: [5.2, 7.1, 6.8, 5.9],  // Valeurs pour Type 1
-                borderColor: 'rgb(255, 99, 132)',
-                fill: false,
-            }, {
-                label: 'Type 2',
-                data: [3.1, 4.2, 3.8, 4.5],  // Valeurs pour Type 2
-                borderColor: 'rgb(54, 162, 235)',
-                fill: false,
-            }]
-        };
+  <h1 style="text-align: center;">Graphique des particules fines (moyenne par heure)</h1>
+  <label for="datePicker">Choisir une date :</label>
+  <input type="date" id="datePicker" />
+  <canvas id="particleChart" width="300" height="100"></canvas>
 
-        // Création du graphique
-        var ctx = document.getElementById('particleChart').getContext('2d');
-        var particleChart = new Chart(ctx, {
-            type: 'line',  // Type de graphique (ici une courbe)
-            data: data,
-            options: {
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Valeur'
-                        }
-                    }
-                }
+  <script>
+    // Labels horaires ISO (ex: ["2025-05-17T14:00:00", ...])
+    const rawLabels = {{ chart_labels|safe }};
+    const datasets = {{ chart_datasets|safe }};
+
+    // Formatage "JJ/MM HHh"
+    function formatLabel(isoDateStr) {
+      const date = new Date(isoDateStr);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      return `${day}/${month} ${hours}h`;
+    }
+
+    const formattedLabels = rawLabels.map(formatLabel);
+
+    const ctx = document.getElementById('particleChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: formattedLabels,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Date et heure'
             }
-        });
-    </script>
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'µg/m³'
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'nearest'
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.parsed.y?.toFixed(2)} µg/m³`;
+              }
+            }
+          }
+        }
+      }
+    });
+  </script>
 </body>
 </html>
