@@ -1,6 +1,7 @@
 from django.core.paginator import Paginator
 from django.views.generic import ListView
 from .models import Measurement, MeasurementType
+from django.shortcuts import render, redirect
 
 class MeasurementListView(ListView):
     model = Measurement
@@ -29,6 +30,27 @@ class MeasurementListView(ListView):
         context['is_paginated'] = page_obj.has_other_pages()
         return context
 
+    def level(self):
+        if self.type.name == "PM10":
+            if self.value <= 20:
+                return "Faible"
+            elif self.value <= 40:
+                return "Modéré"
+            elif self.value <= 50:
+                return "Élevé"
+            else:
+                return "Très élevé"
+        elif self.type.name == "PM2.5":
+            if self.value <= 10:
+                return "Faible"
+            elif self.value <= 20:
+                return "Modéré"
+            elif self.value <= 25:
+                return "Élevé"
+            else:
+                return "Très élevé"
+        return "Inconnu"
+
 class MeasurementByTypeListView(ListView):
     model = Measurement
     template_name = 'fine_particles/measurement_list.html'
@@ -52,3 +74,9 @@ class MeasurementByTypeListView(ListView):
         context['types'] = MeasurementType.objects.all()
         context['is_paginated'] = page_obj.has_other_pages()
         return context
+
+def dashboard(request):
+    return render(request, 'fine_particles/dashboard.html')    
+
+def redirect_dashboard(request):
+    return redirect("/measurements/dashboard/")

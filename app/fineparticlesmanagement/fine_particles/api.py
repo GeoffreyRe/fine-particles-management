@@ -25,3 +25,15 @@ def create_measurement(request):
         serializer = MeasurementSerializer(measurement)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+@api_view(['GET'])
+def get_measurements(request):
+    if request.method == 'GET':
+        # Optimisation de la récupération des mesures et de leurs objets associés
+        measurements = Measurement.objects.all().select_related('unit', 'type')
+        
+        # Sérialisation des données avec many=True
+        serializer = MeasurementSerializer(measurements, many=True)
+        
+        # Retourner les données avec un statut 200 OK
+        return Response(serializer.data, status=status.HTTP_200_OK)

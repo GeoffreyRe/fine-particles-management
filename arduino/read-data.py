@@ -6,7 +6,7 @@ from datetime import datetime
 SERIAL_PORT = 'COM3'
 BAUD_RATE = 9600
 POST_URL = 'http://localhost:8000/api/measurements'
-INTERVAL = 1
+INTERVAL = 60
 
 try:
     ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)

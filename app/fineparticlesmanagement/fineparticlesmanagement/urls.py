@@ -17,10 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from fine_particles.urls import urlpatterns, api_urlpatterns
+from fine_particles import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('measurements/', include(urlpatterns)),
     path('api/measurements', include(api_urlpatterns)),
+    path('', views.redirect_dashboard),
 ]
 
